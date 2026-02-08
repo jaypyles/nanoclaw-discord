@@ -223,6 +223,7 @@ function formatTranscriptMarkdown(
 }
 
 async function main(): Promise<void> {
+  
   let input: ContainerInput;
 
   try {

@@ -5,8 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "copy-discord-skill": "mkdir -p src/skills && cp -r .claude/skills/add-discord src/skills/",
-    "build": "npm run copy-discord-skill && tsc",
+    "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
