@@ -8,6 +8,7 @@ import { z } from 'zod';
 import fs from 'fs';
 import path from 'path';
 import { CronExpressionParser } from 'cron-parser';
+import { createDiscordTools } from './skills/add-discord/agent.js';
 
 const IPC_DIR = '/workspace/ipc';
 const MESSAGES_DIR = path.join(IPC_DIR, 'messages');
@@ -17,6 +18,7 @@ export interface IpcMcpContext {
   chatJid: string;
   groupFolder: string;
   isMain: boolean;
+  isScheduledTask?: boolean;
 }
 
 function writeIpcFile(dir: string, data: object): string {
@@ -34,7 +36,13 @@ function writeIpcFile(dir: string, data: object): string {
 }
 
 export function createIpcMcp(ctx: IpcMcpContext) {
-  const { chatJid, groupFolder, isMain } = ctx;
+  const { chatJid, groupFolder, isMain, isScheduledTask } = ctx;
+
+  const discordTools = createDiscordTools({
+    groupFolder,
+    isMain,
+    isScheduledTask,
+  });
 
   return createSdkMcpServer({
     name: 'nanoclaw',
@@ -42,7 +50,7 @@ export function createIpcMcp(ctx: IpcMcpContext) {
     tools: [
       tool(
         'send_message',
-        'Send a message to the current WhatsApp group. Use this to proactively share information or updates.',
+        'Send a message to the current group (Discord channel). Use this to proactively share information or updates.',
         {
           text: z.string().describe('The message text to send')
         },
@@ -280,14 +288,14 @@ SCHEDULE VALUE FORMAT (all times are LOCAL timezone):
 
       tool(
         'register_group',
-        `Register a new WhatsApp group so the agent can respond to messages there. Main group only.
+        `Register a new Discord channel so the agent can respond to messages there. Main group only.
 
-Use available_groups.json to find the JID for a group. The folder name should be lowercase with hyphens (e.g., "family-chat").`,
+Use available_groups.json to see registered channels. JID format: discord:CHANNEL_ID (snowflake). Folder name should be lowercase with hyphens (e.g., "general-chat").`,
         {
-          jid: z.string().describe('The WhatsApp JID (e.g., "120363336345536173@g.us")'),
-          name: z.string().describe('Display name for the group'),
-          folder: z.string().describe('Folder name for group files (lowercase, hyphens, e.g., "family-chat")'),
-          trigger: z.string().describe('Trigger word (e.g., "@Andy")')
+          jid: z.string().describe('Channel identifier (e.g., "discord:1234567890123456789")'),
+          name: z.string().describe('Display name for the channel'),
+          folder: z.string().describe('Folder name for group files (lowercase, hyphens, e.g., "general-chat")'),
+          trigger: z.string().describe('Trigger word (e.g., "!nano")')
         },
         async (args) => {
           if (!isMain) {
@@ -315,7 +323,8 @@ Use available_groups.json to find the JID for a group. The folder name should be
             }]
           };
         }
-      )
+      ),
+      ...discordTools,
     ]
   });
 }

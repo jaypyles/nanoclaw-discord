@@ -19,10 +19,9 @@ This skill helps users add capabilities or modify behavior. Use AskUserQuestion 
 | File | Purpose |
 |------|---------|
 | `src/config.ts` | Assistant name, trigger pattern, directories |
-| `src/index.ts` | Message routing, WhatsApp connection, agent invocation |
+| `src/index.ts` | Message routing, Discord connection, agent invocation |
 | `src/db.ts` | Database initialization and queries |
 | `src/types.ts` | TypeScript interfaces |
-| `src/whatsapp-auth.ts` | Standalone WhatsApp authentication script |
 | `.mcp.json` | MCP server configuration (reference) |
 | `groups/CLAUDE.md` | Global memory/persona |
 
@@ -100,8 +99,8 @@ launchctl load ~/Library/LaunchAgents/com.nanoclaw.plist
 
 User: "Add Telegram as an input channel"
 
-1. Ask: "Should Telegram use the same @Andy trigger, or a different one?"
-2. Ask: "Should Telegram messages create separate conversation contexts, or share with WhatsApp groups?"
+1. Ask: "Should Telegram use the same !nano trigger, or a different one?"
+2. Ask: "Should Telegram messages create separate conversation contexts, or share with Discord channels?"
 3. Find Telegram MCP or library
 4. Add connection handling in index.ts
 5. Update message storage in db.ts

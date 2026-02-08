@@ -35,23 +35,26 @@ RUN npm install -g agent-browser @anthropic-ai/claude-code
 # Create app directory
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY agent-runner/package*.json ./
+# Copy package files first for better caching (context = project root)
+COPY container/agent-runner/package*.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy source code
-COPY agent-runner/ ./
+COPY container/agent-runner/ ./
+
+# Copy Discord skill MCP tools into container
+COPY .claude/skills/add-discord/agent.ts ./src/skills/add-discord/
 
 # Build TypeScript
 RUN npm run build
 
-# Create workspace directories
+# Create workspace directories (discord_results created by host when processing Discord IPC)
 RUN mkdir -p /workspace/group /workspace/global /workspace/extra /workspace/ipc/messages /workspace/ipc/tasks
 
 # Create entrypoint script
-# Sources env from mounted /workspace/env-dir/env if it exists (workaround for Apple Container -i bug)
+# Sources env from mounted /workspace/env-dir/env if it exists
 RUN printf '#!/bin/bash\nset -e\n[ -f /workspace/env-dir/env ] && export $(cat /workspace/env-dir/env | xargs)\ncat > /tmp/input.json\nnode /app/dist/index.js < /tmp/input.json\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Set ownership to node user (non-root) for writable directories

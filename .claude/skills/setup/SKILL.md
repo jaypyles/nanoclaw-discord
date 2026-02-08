@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Run initial NanoClaw setup. Use when user wants to install dependencies, authenticate WhatsApp, register their main channel, or start the background services. Triggers on "setup", "install", "configure nanoclaw", or first-time setup requests.
+description: Run initial NanoClaw setup. Use when user wants to install dependencies, configure Discord bot, register their main channel, or start the background services. Triggers on "setup", "install", "configure nanoclaw", or first-time setup requests.
 ---
 
 # NanoClaw Setup
@@ -15,63 +15,36 @@ Run all commands automatically. Only pause when user action is required (scannin
 npm install
 ```
 
-## 2. Install Container Runtime
+## 2. Install Docker
 
-First, detect the platform and check what's available:
+Check if Docker is installed and running:
 
 ```bash
-echo "Platform: $(uname -s)"
-which container && echo "Apple Container: installed" || echo "Apple Container: not installed"
-which docker && docker info >/dev/null 2>&1 && echo "Docker: installed and running" || echo "Docker: not installed or not running"
+docker --version && docker info >/dev/null 2>&1 && echo "Docker is running" || echo "Docker not running or not installed"
 ```
 
-### If NOT on macOS (Linux, etc.)
-
-Apple Container is macOS-only. Use Docker instead.
-
-Tell the user:
-> You're on Linux, so we'll use Docker for container isolation. Let me set that up now.
-
-**Use the `/convert-to-docker` skill** to convert the codebase to Docker, then continue to Section 3.
-
-### If on macOS
-
-**If Apple Container is already installed:** Continue to Section 3.
-
-**If Apple Container is NOT installed:** Ask the user:
-> NanoClaw needs a container runtime for isolated agent execution. You have two options:
+If not installed or not running, tell the user:
+> Docker is required for running agents in isolated environments.
 >
-> 1. **Apple Container** (default) - macOS-native, lightweight, designed for Apple silicon
-> 2. **Docker** - Cross-platform, widely used, works on macOS and Linux
+> **macOS:**
+> 1. Download Docker Desktop from https://docker.com/products/docker-desktop
+> 2. Install and start Docker Desktop
+> 3. Wait for the whale icon in the menu bar to stop animating
 >
-> Which would you prefer?
-
-#### Option A: Apple Container
-
-Tell the user:
-> Apple Container is required for running agents in isolated environments.
->
-> 1. Download the latest `.pkg` from https://github.com/apple/container/releases
-> 2. Double-click to install
-> 3. Run `container system start` to start the service
+> **Linux:**
+> ```bash
+> curl -fsSL https://get.docker.com | sh
+> sudo systemctl start docker
+> sudo usermod -aG docker $USER   # Then log out and back in
+> ```
 >
 > Let me know when you've completed these steps.
 
 Wait for user confirmation, then verify:
 
 ```bash
-container system start
-container --version
+docker run --rm hello-world
 ```
-
-**Note:** NanoClaw automatically starts the Apple Container system when it launches, so you don't need to start it manually after reboots.
-
-#### Option B: Docker
-
-Tell the user:
-> You've chosen Docker. Let me set that up now.
-
-**Use the `/convert-to-docker` skill** to convert the codebase to Docker, then continue to Section 3.
 
 ## 3. Configure Claude Authentication
 
@@ -127,45 +100,49 @@ Build the NanoClaw agent container:
 
 This creates the `nanoclaw-agent:latest` image with Node.js, Chromium, Claude Code CLI, and agent-browser.
 
-Verify the build succeeded by running a simple test (this auto-detects which runtime you're using):
+Verify the build succeeded:
 
 ```bash
-if which docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
-  echo '{}' | docker run -i --entrypoint /bin/echo nanoclaw-agent:latest "Container OK" || echo "Container build failed"
-else
-  echo '{}' | container run -i --entrypoint /bin/echo nanoclaw-agent:latest "Container OK" || echo "Container build failed"
-fi
+docker images | grep nanoclaw-agent
+echo '{}' | docker run -i --entrypoint /bin/echo nanoclaw-agent:latest "Container OK" || echo "Container build failed"
 ```
 
-## 5. WhatsApp Authentication
+## 5. Discord Bot Setup
 
 **USER ACTION REQUIRED**
 
-Run the authentication script:
+Tell the user:
+> NanoClaw uses Discord as its channel. You need to create a bot and add it to your server.
+>
+> 1. Open https://discord.com/developers/applications
+> 2. Click **New Application** and name it (e.g., "NanoClaw")
+> 3. Go to **Bot** in the left sidebar → **Add Bot**
+> 4. Click **Reset Token** and copy the token (keep it secret)
+> 5. Under **Privileged Gateway Intents**, enable **MESSAGE CONTENT INTENT** (required for the bot to read messages)
+> 6. Go to **OAuth2** → **URL Generator**, select scope `bot` and permissions: View Channels, Send Messages, Read Message History. Open the generated URL and add the bot to your server.
+
+Add the token to `.env`:
 
 ```bash
-npm run auth
+echo 'DISCORD_BOT_TOKEN="your_bot_token_here"' >> .env
 ```
 
-Tell the user:
-> A QR code will appear. On your phone:
-> 1. Open WhatsApp
-> 2. Tap **Settings → Linked Devices → Link a Device**
-> 3. Scan the QR code
+Verify:
+```bash
+grep DISCORD_BOT_TOKEN .env
+```
 
-Wait for the script to output "Successfully authenticated" then continue.
-
-If it says "Already authenticated", skip to the next step.
+To get a channel ID: In Discord, enable **Developer Mode** (User Settings → Advanced), then right-click the channel → **Copy Channel ID**.
 
 ## 6. Configure Assistant Name
 
 Ask the user:
-> What trigger word do you want to use? (default: `Andy`)
+> What trigger word do you want to use? (default: `!nano`)
 >
 > Messages starting with `@TriggerWord` will be sent to Claude.
 
-If they choose something other than `Andy`, update it in these places:
-1. `groups/CLAUDE.md` - Change "# Andy" and "You are Andy" to the new name
+If they choose something other than `!nano`, update it in these places:
+1. `groups/CLAUDE.md` - Change "# nano" and "You are nano" to the new name
 2. `groups/main/CLAUDE.md` - Same changes at the top
 3. `data/registered_groups.json` - Use `@NewName` as the trigger when registering groups
 
@@ -185,59 +162,39 @@ Before registering your main channel, you need to understand an important securi
 > - Can write to global memory that all groups can read
 > - Has read-write access to the entire NanoClaw project
 >
-> **Recommendation:** Use your personal "Message Yourself" chat or a solo WhatsApp group as your main channel. This ensures only you have admin control.
+> **Recommendation:** Use a private Discord channel (or server) as your main channel so only you have admin control.
 >
 > **Question:** Which setup will you use for your main channel?
 >
 > Options:
 > 1. Personal chat (Message Yourself) - Recommended
-> 2. Solo WhatsApp group (just me)
+> 2. Private Discord channel (just me)
 > 3. Group with other people (I understand the security implications)
 
 If they choose option 3, ask a follow-up:
 
-> You've chosen a group with other people. This means everyone in that group will have admin privileges over NanoClaw.
+> You've chosen a channel with other people. This means everyone in that channel will have admin privileges over NanoClaw.
 >
 > Are you sure you want to proceed? The other members will be able to:
-> - Read messages from your other registered chats
+> - Read messages from your other registered channels
 > - Schedule and manage tasks
 > - Access any directories you've mounted
 >
 > Options:
 > 1. Yes, I understand and want to proceed
-> 2. No, let me use a personal chat or solo group instead
+> 2. No, let me use a private channel or DM instead
 
 ## 8. Register Main Channel
 
 Ask the user:
-> Do you want to use your **personal chat** (message yourself) or a **WhatsApp group** as your main control channel?
+> Which Discord channel do you want as your **main** (admin) channel?
+>
+> You need the **Channel ID**: In Discord, enable Developer Mode (User Settings → Advanced), then right-click the channel → **Copy Channel ID**.
 
-For personal chat:
-> Send any message to yourself in WhatsApp (the "Message Yourself" chat). Tell me when done.
-
-For group:
-> Send any message in the WhatsApp group you want to use as your main channel. Tell me when done.
-
-After user confirms, start the app briefly to capture the message:
-
-```bash
-timeout 10 npm run dev || true
-```
-
-Then find the JID from the database:
-
-```bash
-# For personal chat (ends with @s.whatsapp.net)
-sqlite3 store/messages.db "SELECT DISTINCT chat_jid FROM messages WHERE chat_jid LIKE '%@s.whatsapp.net' ORDER BY timestamp DESC LIMIT 5"
-
-# For group (ends with @g.us)
-sqlite3 store/messages.db "SELECT DISTINCT chat_jid FROM messages WHERE chat_jid LIKE '%@g.us' ORDER BY timestamp DESC LIMIT 5"
-```
-
-Create/update `data/registered_groups.json` using the JID from above and the assistant name from step 5:
+Create/update `data/registered_groups.json` using the channel ID (format: `discord:CHANNEL_ID`) and the assistant name from step 6:
 ```json
 {
-  "JID_HERE": {
+  "discord:CHANNEL_ID_HERE": {
     "name": "main",
     "folder": "main",
     "trigger": "@ASSISTANT_NAME",
@@ -298,7 +255,7 @@ For each directory they provide, ask:
 ### 9b. Configure Non-Main Group Access
 
 Ask the user:
-> Should **non-main groups** (other WhatsApp chats you add later) be restricted to **read-only** access even if read-write is allowed for the directory?
+> Should **non-main groups** (other Discord channels you add later) be restricted to **read-only** access even if read-write is allowed for the directory?
 >
 > Recommended: **Yes** - this prevents other groups from modifying files even if you grant them access to a directory.
 
@@ -428,7 +385,7 @@ Check the logs:
 tail -f logs/nanoclaw.log
 ```
 
-The user should receive a response in WhatsApp.
+The user should receive a response in Discord.
 
 ## Troubleshooting
 
@@ -442,12 +399,12 @@ The user should receive a response in WhatsApp.
 
 **No response to messages**:
 - Verify the trigger pattern matches (e.g., `@AssistantName` at start of message)
-- Check that the chat JID is in `data/registered_groups.json`
+- Check that the channel is in `data/registered_groups.json` as `discord:CHANNEL_ID`
+- Ensure **MESSAGE CONTENT INTENT** is enabled for the bot in Discord Developer Portal
 - Check `logs/nanoclaw.log` for errors
 
-**WhatsApp disconnected**:
-- The service will show a macOS notification
-- Run `npm run auth` to re-authenticate
+**Discord bot offline**:
+- Verify `DISCORD_BOT_TOKEN` in `.env` is correct (reset token in Developer Portal if needed)
 - Restart the service: `launchctl kickstart -k gui/$(id -u)/com.nanoclaw`
 
 **Unload service**:

@@ -1,16 +1,23 @@
 <p align="center">
-  <img src="assets/nanoclaw-logo.png" alt="NanoClaw" width="400">
+  <img src="assets/nanoclaw-logo.png" alt="nanoclaw-discord" width="400">
 </p>
 
 <p align="center">
-  My personal Claude assistant that runs securely in containers. Lightweight and built to be understood and customized for your own needs.
+  <strong>nanoclaw-discord</strong> — NanoClaw preconfigured for <strong>Discord</strong> and <strong>Docker</strong>. One process, one channel stack, no config matrix.
 </p>
 
-## Why I Built This
+<p align="center">
+  Message Claude from Discord. Agents run in Docker. Small codebase, secure by isolation.
+</p>
 
-[OpenClaw](https://github.com/openclaw/openclaw) is an impressive project with a great vision. But I can't sleep well running software I don't understand with access to my life. OpenClaw has 52+ modules, 8 config management files, 45+ dependencies, and abstractions for 15 channel providers. Security is application-level (allowlists, pairing codes) rather than OS isolation. Everything runs in one Node process with shared memory.
+## What This Is
 
-NanoClaw gives you the same core functionality in a codebase you can understand in 8 minutes. One process. A handful of files. Agents run in actual Linux containers with filesystem isolation, not behind permission checks.
+[NanoClaw](https://github.com/gavrielc/nanoclaw) is a minimal, understandable Claude assistant: one Node process, agents in containers, no framework bloat. **nanoclaw-discord** is that same stack, shipped for a single main use case:
+
+- **Discord** as the only messaging channel.
+- **Docker** as the only container runtime (macOS and Linux).
+
+No “choose your runtime” or “add Discord via skill” — it’s Discord + Docker by default. You get a small, auditable codebase that does one thing clearly.
 
 ## Quick Start
 
@@ -20,146 +27,116 @@ cd nanoclaw
 claude
 ```
 
-Then run `/setup`. Claude Code handles everything: dependencies, authentication, container setup, service configuration.
+Then run **`/setup`**. Claude Code will walk you through: dependencies, Discord bot token, Claude auth, Docker image, and registering your first channel.
 
 ## Philosophy
 
-**Small enough to understand.** One process, a few source files. No microservices, no message queues, no abstraction layers. Have Claude Code walk you through it.
+**One stack.** Discord for I/O, Docker for agents. No optional runtimes or channel providers to wire up.
 
-**Secure by isolation.** Agents run in Linux containers (Apple Container on macOS, or Docker). They can only see what's explicitly mounted. Bash access is safe because commands run inside the container, not on your host.
+**Small enough to understand.** One process, a handful of files. No microservices, no message queues. Have Claude Code walk you through it.
 
-**Built for one user.** This isn't a framework. It's working software that fits my exact needs. You fork it and have Claude Code make it match your exact needs.
+**Secure by isolation.** Agents run in Docker containers with explicit mounts. They only see what you mount. Bash inside the container is safe.
 
-**Customization = code changes.** No configuration sprawl. Want different behavior? Modify the code. The codebase is small enough that this is safe.
+**Built for one user.** Fork it and have Claude Code adapt it to your workflow. Customization = code changes, not config files.
 
-**AI-native.** No installation wizard; Claude Code guides setup. No monitoring dashboard; ask Claude what's happening. No debugging tools; describe the problem, Claude fixes it.
+**AI-native.** No install wizard; Claude Code guides setup. No dashboard; ask Claude what’s happening. No debug UI; describe the problem, Claude fixes it.
 
-**Skills over features.** Contributors shouldn't add features (e.g. support for Telegram) to the codebase. Instead, they contribute [claude code skills](https://code.claude.com/docs/en/skills) like `/add-telegram` that transform your fork. You end up with clean code that does exactly what you need.
-
-**Best harness, best model.** This runs on Claude Agent SDK, which means you're running Claude Code directly. The harness matters. A bad harness makes even smart models seem dumb, a good harness gives them superpowers. Claude Code is (IMO) the best harness available.
+**Best harness, best model.** Runs on Claude Agent SDK (Claude Code). The harness matters; this one is minimal and transparent.
 
 ## What It Supports
 
-- **WhatsApp I/O** - Message Claude from your phone
-- **Isolated group context** - Each group has its own `CLAUDE.md` memory, isolated filesystem, and runs in its own container sandbox with only that filesystem mounted
-- **Main channel** - Your private channel (self-chat) for admin control; every other group is completely isolated
-- **Scheduled tasks** - Recurring jobs that run Claude and can message you back
-- **Web access** - Search and fetch content
-- **Container isolation** - Agents sandboxed in Apple Container (macOS) or Docker (macOS/Linux)
-- **Optional integrations** - Add Gmail (`/add-gmail`) and more via skills
+- **Discord I/O** — Register channels in `data/registered_groups.json`; only those channels trigger the agent. Trigger word (default `!nano`) in each channel.
+- **Isolated group context** — Each channel has its own `CLAUDE.md` memory and filesystem; each run is in its own container with only that group’s data mounted.
+- **Main channel** — One Discord channel is “main” (admin): register other channels, manage scheduled tasks, optional extra mounts.
+- **Scheduled tasks** — Recurring or one-time jobs that run Claude and can message back via Discord.
+- **Web access** — Search and fetch; agent can use browser automation (agent-browser) when you add the skill.
+- **Optional skills** — Add Gmail (`/add-gmail`), more channels, or custom skills via `.md` in `container/skills/` and CLAUDE.md.
 
 ## Usage
 
-Talk to your assistant with the trigger word (default: `@Andy`):
+In any registered Discord channel, use the trigger (e.g. `!nano`):
 
 ```
-@Andy send an overview of the sales pipeline every weekday morning at 9am (has access to my Obsidian vault folder)
-@Andy review the git history for the past week each Friday and update the README if there's drift
-@Andy every Monday at 8am, compile news on AI developments from Hacker News and TechCrunch and message me a briefing
+!nano send a summary of the sales pipeline every weekday at 9am
+!nano every Monday at 8am, compile AI news from Hacker News and message me a briefing
+!nano what skills do you have?
 ```
 
-From the main channel (your self-chat), you can manage groups and tasks:
+From the **main** channel you can also:
+
 ```
-@Andy list all scheduled tasks across groups
-@Andy pause the Monday briefing task
-@Andy join the Family Chat group
+!nano list all scheduled tasks
+!nano pause the Monday briefing task
+!nano register the #general channel
 ```
+
+See [docs/SETUP-GROUP.md](docs/SETUP-GROUP.md) for registering channels and [docs/SETUP-GROUP.md#optional-choosing-a-model](docs/SETUP-GROUP.md#optional-choosing-a-model) for setting `CLAUDE_MODEL` in `.env`.
 
 ## Customizing
 
-There are no configuration files to learn. Just tell Claude Code what you want:
+Tell Claude Code what you want; the codebase is small enough to change safely:
 
-- "Change the trigger word to @Bob"
-- "Remember in the future to make responses shorter and more direct"
-- "Add a custom greeting when I say good morning"
-- "Store conversation summaries weekly"
+- “Change the trigger word to !bob”
+- “Remember to keep responses shorter”
+- “Add a skill for Notion” (and add `container/skills/notion-api.md` + a bullet in `groups/main/CLAUDE.md`)
 
-Or run `/customize` for guided changes.
-
-The codebase is small enough that Claude can safely modify it.
-
-## Contributing
-
-**Don't add features. Add skills.**
-
-If you want to add Telegram support, don't create a PR that adds Telegram alongside WhatsApp. Instead, contribute a skill file (`.claude/skills/add-telegram/SKILL.md`) that teaches Claude Code how to transform a NanoClaw installation to use Telegram.
-
-Users then run `/add-telegram` on their fork and get clean code that does exactly what they need, not a bloated system trying to support every use case.
-
-### RFS (Request for Skills)
-
-Skills we'd love to see:
-
-**Communication Channels**
-- `/add-telegram` - Add Telegram as channel. Should give the user option to replace WhatsApp or add as additional channel. Also should be possible to add it as a control channel (where it can trigger actions) or just a channel that can be used in actions triggered elsewhere
-- `/add-slack` - Add Slack
-- `/add-discord` - Add Discord
-
-**Platform Support**
-- `/setup-windows` - Windows via WSL2 + Docker
-
-**Session Management**
-- `/add-clear` - Add a `/clear` command that compacts the conversation (summarizes context while preserving critical information in the same session). Requires figuring out how to trigger compaction programmatically via the Claude Agent SDK.
+Or run **`/customize`** for guided changes.
 
 ## Requirements
 
-- macOS or Linux
-- Node.js 20+
-- [Claude Code](https://claude.ai/download)
-- [Apple Container](https://github.com/apple/container) (macOS) or [Docker](https://docker.com/products/docker-desktop) (macOS/Linux)
+- **macOS or Linux**
+- **Node.js 20+**
+- **[Claude Code](https://claude.ai/download)** (for setup and editing)
+- **[Docker](https://docker.com/products/docker-desktop)**
 
 ## Architecture
 
 ```
-WhatsApp (baileys) --> SQLite --> Polling loop --> Container (Claude Agent SDK) --> Response
+Discord (discord.js) → MessageCreate events → Host (Node) → Docker container (Claude Agent SDK) → Response
 ```
 
-Single Node.js process. Agents execute in isolated Linux containers with mounted directories. IPC via filesystem. No daemons, no queues, no complexity.
+Single Node process on the host: Discord connection, routing, scheduler, IPC. Each message (or scheduled task) spawns a short-lived Docker container with the group’s mounts; the container runs Claude Agent SDK and exits. No daemons, no queues.
 
 Key files:
-- `src/index.ts` - Main app: WhatsApp connection, routing, IPC
-- `src/container-runner.ts` - Spawns agent containers
-- `src/task-scheduler.ts` - Runs scheduled tasks
-- `src/db.ts` - SQLite operations
-- `groups/*/CLAUDE.md` - Per-group memory
+
+| File | Purpose |
+|------|---------|
+| `src/index.ts` | Discord connection, message routing, IPC |
+| `src/container-runner.ts` | Builds mounts, spawns `docker run` |
+| `src/task-scheduler.ts` | Scheduled tasks |
+| `src/db.ts` | SQLite (tasks, run history) |
+| `groups/*/CLAUDE.md` | Per-channel memory and instructions |
+| `data/registered_groups.json` | Registered Discord channel IDs |
 
 ## FAQ
 
-**Why WhatsApp and not Telegram/Signal/etc?**
+**Why Discord only?**  
+This variant is Discord + Docker only. To add another channel, use a skill or fork and add it.
 
-Because I use WhatsApp. Fork it and run a skill to change it. That's the whole point.
+**Why Docker only?**  
+So the same setup runs on macOS and Linux with one runtime. No Apple Container or other backends.
 
-**Why Apple Container instead of Docker?**
+**Can I run this on Linux?**  
+Yes. Install Docker and Node, clone, run `/setup` with Claude Code.
 
-On macOS, Apple Container is lightweight, fast, and optimized for Apple silicon. But Docker is also fully supported—during `/setup`, you can choose which runtime to use. On Linux, Docker is used automatically.
+**Is this secure?**  
+Agents run in containers with explicit mounts; they don’t see your full filesystem or `.env` (only a small allowlist of vars is passed in). See [docs/SECURITY.md](docs/SECURITY.md) for the security model.
 
-**Can I run this on Linux?**
+**How do I debug issues?**  
+Ask Claude Code: “Why didn’t the last message get a response?” “What’s in the latest container log?” Or run **`/debug`** for guided checks.
 
-Yes. Run `/setup` and it will automatically configure Docker as the container runtime. Thanks to [@dotsetgreg](https://github.com/dotsetgreg) for contributing the `/convert-to-docker` skill.
+**What’s the difference from upstream NanoClaw?**  
+Upstream may support other runtimes/channels via skills. This setup locks to Discord + Docker for a simpler, single-use-case.
 
-**Is this secure?**
+## Contributing
 
-Agents run in containers, not behind application-level permission checks. They can only access explicitly mounted directories. You should still review what you're running, but the codebase is small enough that you actually can. See [docs/SECURITY.md](docs/SECURITY.md) for the full security model.
+**Prefer skills over in-repo features.**  
+If you want Telegram or Slack, contribute a skill (e.g. `.claude/skills/add-telegram/SKILL.md`) that transforms a clone to add that channel. Keep the base as Discord + Docker.
 
-**Why no configuration files?**
-
-We don't want configuration sprawl. Every user should customize it to so that the code matches exactly what they want rather than configuring a generic system. If you like having config files, tell Claude to add them.
-
-**How do I debug issues?**
-
-Ask Claude Code. "Why isn't the scheduler running?" "What's in the recent logs?" "Why did this message not get a response?" That's the AI-native approach.
-
-**Why isn't the setup working for me?**
-
-I don't know. Run `claude`, then run `/debug`. If claude finds an issue that is likely affecting other users, open a PR to modify the setup SKILL.md.
-
-**What changes will be accepted into the codebase?**
-
-Security fixes, bug fixes, and clear improvements to the base configuration. That's it.
-
-Everything else (new capabilities, OS compatibility, hardware support, enhancements) should be contributed as skills.
-
-This keeps the base system minimal and lets every user customize their installation without inheriting features they don't want.
+**RFS (Request for Skills)**  
+- `/add-telegram`, `/add-slack` — Additional channels alongside Discord  
+- `/setup-windows` — Windows via WSL2 + Docker  
+- `/add-clear` — `/clear` command to compact conversation context
 
 ## License
 

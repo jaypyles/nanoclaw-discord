@@ -5,7 +5,7 @@ description: X (Twitter) integration for NanoClaw. Post tweets, like, reply, ret
 
 # X (Twitter) Integration
 
-Browser automation for X interactions via WhatsApp.
+Browser automation for X interactions via Discord-triggered agent.
 
 > **Compatibility:** NanoClaw v1.0.0. Directory structure may change in future versions.
 
@@ -23,7 +23,7 @@ Browser automation for X interactions via WhatsApp.
 
 Before using this skill, ensure:
 
-1. **NanoClaw is installed and running** - WhatsApp connected, service active
+1. **NanoClaw is installed and running** - Discord connected, service active
 2. **Dependencies installed**:
    ```bash
    npm ls playwright dotenv-cli || npm install playwright dotenv-cli
@@ -279,7 +279,7 @@ launchctl kickstart -k gui/$(id -u)/com.nanoclaw
 launchctl list | grep nanoclaw  # Should show PID and exit code 0 or -
 ```
 
-## Usage via WhatsApp
+## Usage via Discord
 
 Replace `@Assistant` with your configured trigger name (`ASSISTANT_NAME` in `.env`):
 

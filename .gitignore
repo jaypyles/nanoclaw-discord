@@ -4,6 +4,9 @@ node_modules/
 # Build output
 dist/
 
+# Discord skill copied at build time from .claude/skills/add-discord
+src/skills/
+
 # Local data & auth
 store/
 data/
