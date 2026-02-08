@@ -12,6 +12,10 @@ store/
 data/
 logs/
 
+# User-specific main channel context (do not commit)
+groups/main/USER.md
+user-*.md
+
 # Secrets
 *.keys.json
 .env

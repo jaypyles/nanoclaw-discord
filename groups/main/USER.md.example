@@ -1,0 +1,14 @@
+# User-specific context (main channel)
+
+All user specific skills are formatted as user-*.md
+
+Copy this file to `USER.md` and edit. USER.md is ignored by git and is tacked onto the main channel context so the agent knows your preferences.
+
+```markdown
+# My context
+
+- **Name:** Your name or how to address you
+- **Timezone:** e.g. America/Los_Angeles
+- **Preferences:** e.g. "Keep replies short unless I ask for detail", "Use metric units"
+- **Recurring:** Anything you want the agent to remember for this channel
+```
