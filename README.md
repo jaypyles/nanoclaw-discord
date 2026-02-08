@@ -99,14 +99,14 @@ Single Node process on the host: Discord connection, routing, scheduler, IPC. Ea
 
 Key files:
 
-| File | Purpose |
-|------|---------|
-| `src/index.ts` | Discord connection, message routing, IPC |
-| `src/container-runner.ts` | Builds mounts, spawns `docker run` |
-| `src/task-scheduler.ts` | Scheduled tasks |
-| `src/db.ts` | SQLite (tasks, run history) |
-| `groups/*/CLAUDE.md` | Per-channel memory and instructions |
-| `data/registered_groups.json` | Registered Discord channel IDs |
+| File                          | Purpose                                  |
+| ----------------------------- | ---------------------------------------- |
+| `src/index.ts`                | Discord connection, message routing, IPC |
+| `src/container-runner.ts`     | Builds mounts, spawns `docker run`       |
+| `src/task-scheduler.ts`       | Scheduled tasks                          |
+| `src/db.ts`                   | SQLite (tasks, run history)              |
+| `groups/*/CLAUDE.md`          | Per-channel memory and instructions      |
+| `data/registered_groups.json` | Registered Discord channel IDs           |
 
 ## FAQ
 
@@ -132,11 +132,6 @@ Upstream may support other runtimes/channels via skills. This setup locks to Dis
 
 **Prefer skills over in-repo features.**  
 If you want Telegram or Slack, contribute a skill (e.g. `.claude/skills/add-telegram/SKILL.md`) that transforms a clone to add that channel. Keep the base as Discord + Docker.
-
-**RFS (Request for Skills)**  
-- `/add-telegram`, `/add-slack` — Additional channels alongside Discord  
-- `/setup-windows` — Windows via WSL2 + Docker  
-- `/add-clear` — `/clear` command to compact conversation context
 
 ## License
 
